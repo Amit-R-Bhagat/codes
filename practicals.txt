@@ -1,0 +1,1451 @@
+// Practical 10
+
+#include<bits/stdc++.h>
+using namespace std;
+class NaiveBayesClassifier{
+private:
+    unordered_map<int,double> classes;
+    unordered_map<int, unordered_map<int, double>> attributesPerClass;
+public:
+    NaiveBayesClassifier(vector<vector<int>> &data, int DimSize)
+    {
+        for(auto entry:data){
+            if(classes.find(entry[0])==classes.end())
+            {
+                classes[entry[0]]=1;
+                unordered_map<int, double> pxc;
+                attributesPerClass[entry[0]] = pxc;
+
+            }
+            else{
+                classes[entry[0]]+=1;
+
+            }
+            for(int k=1;k<DimSize;k++){
+                if(attributesPerClass[entry[0]].find(entry[k])== attributesPerClass[entry[0]].end())
+                {
+                    attributesPerClass[entry[0]][entry[k]]=1;
+                    }
+ else
+ {
+
+     attributesPerClass[entry[0]][entry[k]] +=1;
+
+ }
+ }
+ }
+ for(auto seg: attributesPerClass)
+ {
+
+     if(seg.first==0)
+     {
+
+         cout<<"--- Class Apple"<<"---"<<endl;
+     }
+     if(seg.first==1)
+     {
+         cout<<" --- Class PineApple"<<"---"<<endl;
+     }
+     if(seg.first==2)
+     {
+         cout<<"--- Class Cherry"<<"---"<< endl;
+     }
+     for(auto entry: seg.second)
+     {
+
+         entry.second /= classes[seg.first];
+         cout<<"Attribute P(A="<<entry.first<<"| B="<<seg.first <<")="<< entry.second<< endl;
+     }
+     classes[seg.first]/= data.size();
+     cout<<"Class P(B="<<seg.first<< ")="<<classes[seg.first]<<"\n\n";
+ }
+ }
+int predict(vector<int> attributes)
+{
+int maxcid = -1;
+double maxp = 0;
+for(auto cls :classes)
+{
+double pCx=cls.second;
+for(int i=0;attributes.size();i++){
+pCx*=attributesPerClass[cls.first][attributes[i]];
+}
+if(pCx>maxp){
+maxp=pCx;
+maxcid=cls.first;
+}
+}
+cout<<"Predict Class:\t"<<maxcid<<"===>P(A|B) = "<<maxp<<endl;
+return maxcid;
+}
+};
+void populateData(vector<vector<int>> &data,unordered_map<string,int>&classmap,unordered_map<string,int>&attrimap,string c , string a1,string a2,int K)
+{
+vector<int> apair={classmap[c],attrimap[a1],attrimap[a2]};
+vector<vector<int>> newarr(K,apair);
+data.insert(data.end(),newarr.begin(),newarr.end());
+}
+int main() {
+    unordered_map<string, int> classmap = {{"apple",0}, {"pineapple", 1}, {"cherry", 2}};
+    unordered_map<string, int> attrimap = {{"red", 0}, {"green", 1}, {"yellow", 2},
+
+    {"round", 10},{"oval", 11}, {"heart", 2}};
+
+    vector<vector<int>> data;
+    populateData(data, classmap,attrimap, "apple", "green", "round", 20);
+    populateData(data, classmap,attrimap, "apple", "red", "round", 50);
+    populateData(data, classmap,attrimap, "apple", "yellow", "round", 10);
+    populateData(data, classmap,attrimap, "apple", "red", "oval", 5);
+    populateData(data, classmap,attrimap, "apple", "red", "heart", 5);
+    populateData(data, classmap,attrimap, "pineapple", "green", "oval", 30);
+    populateData(data, classmap,attrimap, "pineapple", "yellow", "oval", 70);
+    populateData(data, classmap,attrimap, "pineapple", "green", "round", 5);
+    populateData(data, classmap,attrimap, "pineapple", "yellow", "round", 5);
+    populateData(data, classmap,attrimap, "cherry", "yellow", "heart", 50);
+    populateData(data, classmap,attrimap, "cherry", "red", "heart", 70);
+    populateData(data, classmap,attrimap, "cherry", "yellow", "round", 5);
+    random_shuffle(data.begin(),data.end());
+
+NaiveBayesClassifier mymodel(data, 2);
+
+int  cls = mymodel.predict({attrimap["red"],attrimap["round"]});
+if(cls==0)
+{
+cout<<"Predicted class:\tApple"<<endl;
+}
+if(cls==1)
+{
+cout<<"Predicted class:\tPineapple"<<endl;
+}
+if(cls==2)
+{
+cout<<"Predicted class:\tCherry"<<endl;
+}
+return 0;
+}
+// Practical 2
+
+#include <bits/stdc++.h>
+using namespace std;
+#define N 3
+struct Node
+{
+	Node* parent;
+	int mat[N][N];
+	int x, y;
+	int cost;
+	int level;
+};
+
+int printMatrix(int mat[N][N])
+{
+	for (int i = 0; i < N; i++)
+	{
+		for (int j = 0; j < N; j++)
+			printf("%d ", mat[i][j]);
+		printf("\n");
+	}
+}
+
+Node* newNode(int mat[N][N], int x, int y, int newX,
+			int newY, int level, Node* parent)
+{
+	Node* node = new Node;
+	node->parent = parent;
+	memcpy(node->mat, mat, sizeof node->mat);
+	swap(node->mat[x][y], node->mat[newX][newY]);
+	node->cost = INT_MAX;
+	node->level = level;
+	node->x = newX;
+	node->y = newY;
+
+	return node;
+}
+
+int row[] = { 1, 0, -1, 0 };
+int col[] = { 0, -1, 0, 1 };
+{
+	int count = 0;
+	for (int i = 0; i < N; i++)
+	for (int j = 0; j < N; j++)
+		if (initial[i][j] && initial[i][j] != final[i][j])
+		count++;
+	return count;
+}
+
+int isSafe(int x, int y)
+{
+	return (x >= 0 && x < N && y >= 0 && y < N);
+}
+
+void printPath(Node* root)
+{
+	if (root == NULL)
+		return;
+	printPath(root->parent);
+	printMatrix(root->mat);
+
+	printf("\n");
+}
+
+struct comp
+{
+	bool operator()(const Node* lhs, const Node* rhs) const
+	{
+		return (lhs->cost + lhs->level) > (rhs->cost + rhs->level);
+	}
+};
+
+void solve(int initial[N][N], int x, int y,
+		int final[N][N])
+{
+	priority_queue<Node*, std::vector<Node*>, comp> pq;
+	Node* root = newNode(initial, x, y, x, y, 0, NULL);
+	root->cost = calculateCost(initial, final);
+	pq.push(root);
+	while (!pq.empty())
+	{
+		Node* min = pq.top();
+		pq.pop();
+		if (min->cost == 0)
+		{
+			printPath(min);
+			return;
+		}
+		for (int i = 0; i < 4; i++)
+		{
+			if (isSafe(min->x + row[i], min->y + col[i]))
+			{
+				Node* child = newNode(min->mat, min->x,
+							min->y, min->x + row[i],
+							min->y + col[i],
+							min->level + 1, min);
+				child->cost = calculateCost(child->mat, final);
+				pq.push(child);
+			}
+		}
+	}
+}
+
+int main()
+{
+	int initial[N][N] =
+	{
+		{1, 2, 3},
+		{0, 4, 6},
+		{7, 5, 8}
+	};
+	int final[N][N] =
+	{
+		{1, 2, 3},
+		{4, 5, 6},
+		{7, 8, 0}
+	};
+	int x = 0, y = 3;
+	solve(initial, x, y, final);
+	return 0;
+}
+// Practical 3
+
+#include<stdio.h>
+#include<conio.h>
+struct node
+{	
+    int x, y;
+    struct node *next;
+}*root, *left, *right;
+
+void main()
+{
+    int jug1, jug2, f1, f2;
+    printf("Capacity of jug1 : ");
+    scanf("%d", &jug1);
+    printf("Capacity of jug2 : ");
+    scanf("%d", &jug2);
+    printf("Required water in jug1 : ");
+    scanf("%d", &f1);
+    printf("Required water in jug2 : ");
+    scanf("%d", &f2);
+    generateTree(jug1, jug2, f1, f2);
+    DFS();
+    getch();
+}
+
+int isNodePresent(struct node *next, int jug1, int jug2, int f1, int f2)
+{
+    struct node *temp;
+    if((next->x == f1) && (next->y == f2)){
+        return(0);
+    }
+    if((next->x == jug1) && (next->y == jug2)){
+        return(1);
+    }
+    if((next->x == 0) && (next->y == 0)){
+        return(1);
+    }
+    temp = left;
+    while(1)
+    {
+        if((temp->x == next->x) && (temp->y == next->y)){
+            return(1);
+        }
+        else if(temp->next == NULL){
+            break;
+        } else {
+            temp = temp->next;
+        }
+    }
+    temp = right;
+    while(1)
+    {
+        if((temp->x == next->x) && (temp->y == next->y)){
+            return(1);
+        } else if(temp->next == NULL){
+            break;
+        }
+        temp = temp->next;
+    }
+    return(0);
+}
+
+void DFS()
+{
+    struct node *temp;
+    temp = left;
+    printf("Start State : (%d,%d)\n", root->x, root->y);
+    printf("Solution : \n");
+    while(1)
+    {
+        printf("(%d,%d)\n", temp->x, temp->y);
+        if(temp->next == NULL){
+            break;
+        }
+        temp = temp->next;
+    }
+    temp = right;
+}
+
+
+struct node* genNewState(struct node *current, int jug1, int jug2, int f1, int f2)
+{
+    int d;
+    struct node *next;
+    next = (struct node*)malloc(sizeof(struct node));
+    next->x = jug1;
+    next->y = current->y;
+    if(isNodePresent(next, jug1, jug2, f1, f2) != 1){
+        return(next);
+    }
+    next->x = current->x;
+    next->y = jug2;
+    if(isNodePresent(next, jug1, jug2, f1, f2) != 1){
+        return(next);
+    }
+    next->x = 0;
+    next->y = current->y;
+    if(isNodePresent(next, jug1, jug2, f1, f2) != 1){
+        return(next);
+    }
+    next->y = 0;
+    next->x = current->x;
+    if(isNodePresent(next, jug1, jug2, f1, f2) != 1){
+        return(next);
+    }
+    if((current->y < jug2) && (current->x != 0))
+    {
+        d = jug2 - current->y;
+        if(d >= current->x)
+        {
+            next->x = 0;
+            next->y = current->y + current->x;
+        } else {
+            next->x = current->x - d;
+            next->y = current->y + d;
+        }
+        if(isNodePresent(next, jug1, jug2, f1, f2) != 1){
+            return(next);
+        }
+    }
+    if((current->x < jug1) && (current->y != 0))
+    {
+        d = jug1 - current->x;
+        if(d >= current->y) {
+            next->y = 0;
+            next->x = current->x + current->y;
+        } else {
+            next->y = current->y - d;
+            next->x = current->x + d;
+        }
+        if(isNodePresent(next, jug1, jug2, f1, f2) != 1){
+            return(next);
+        }
+    }
+    return(NULL);
+}
+
+void generateTree(int jug1, int jug2, int f1, int f2)
+{
+    int flag1, flag2;
+    struct node *tempLeft, *tempRight;
+    root  = (struct node*)malloc(sizeof(struct node));
+    root->x = 0; root->y = 0; root->next = NULL;
+    left = (struct node*)malloc(sizeof(struct node));
+    left->x = 0; left->y = jug2; left->next = NULL;
+    right = (struct node*)malloc(sizeof(struct node));
+    right->x = jug1; right->y = 0; right->next = NULL;
+    tempLeft = left;
+    tempRight = right;
+    while(1)
+    {
+        flag1 = 0; flag2 = 0;
+        if((tempLeft->x != f1) || (tempLeft->y != f2))
+        {
+            tempLeft->next = genNewState(tempLeft, jug1, jug2, f1, f2);
+            tempLeft = tempLeft->next;
+            tempLeft->next = NULL;
+            flag1 = 1;
+        }
+        if((tempRight->x != f1) || (tempRight->y != f2))
+        {
+            tempRight->next = genNewState(tempRight, jug1, jug2, f1, f2);
+            tempRight = tempRight->next;
+            tempRight->next = NULL;
+            flag2 = 1;
+        }
+        if((flag1 == 0) && (flag2 == 0))
+            break;
+    }
+}
+// Practical 4
+
+#include <bits/stdc++.h>
+using namespace std;
+const char UP ='1';
+const char DOWN= '2';
+const char LEFT= '3';
+const char RIGHT= '4';
+
+void printArray(int** array)
+{
+    for(int a=0;a<3;a++)
+    {
+        for(int b=0;b<3;b++)
+        {
+      		cout<< setw(8) << array[a][b];
+        }
+        cout<<endl;
+    }
+    cout<<endl;
+}
+// Calculate Manhattan distance
+int manhattan_distance(int** start_state,int** goal_state)
+{
+    int manhattan_distance=0;
+    for(int i=0;i<3;i++)
+        {
+            for(int j=0;j<3;j++)
+            {
+                if(start_state[i][j] > 0)
+                {
+                    for(int k=0;k<3;k++)
+                    {
+                        for(int l=0;l<3;l++)
+                        {
+                            if (goal_state[k][l] == start_state[i][j])
+                            {
+                                manhattan_distance=manhattan_distance + (abs(i-k)+abs(j-l));
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+return manhattan_distance;
+}
+void makeMove(int** temp,int move)
+{
+    int flag=0;
+    for(int i=0;i<3;i++)
+    {
+        for(int j=0;j<3;j++)
+        {
+            if(temp[i][j] == 0)
+            {
+                if(move==1)
+                {
+                    temp[i][j] = temp[i-1][j];
+                	temp[i-1][j] = 0;
+                    flag=1;
+                    break;
+                }
+                else if(move==2)
+                {
+                    temp[i][j] = temp[i+1][j];
+                	temp[i+1][j] = 0;
+                    flag=1;
+                    break;
+                }
+                else if(move==3)
+                {
+                    temp[i][j] = temp[i][j-1];
+                	temp[i][j-1] = 0;
+                    flag=1;
+                    break;
+                }
+                else
+                {
+                	temp[i][j] = temp[i][j+1];
+                	temp[i][j+1] = 0;
+                    flag=1;
+                    break;
+                }
+            }
+        }
+        if(flag==1){break;}
+    }
+}
+//-----------------------------------------------------------------------------------------------------------
+int tile_Ordering(int** current_state,int** goal_state,int move)
+{
+    int** temp = new int*[3]; 
+    for(int i=0;i<3;i++)
+    {
+        temp[i]=new int[3]; // these represents columns
+        for(int j=0;j<3;j++)
+        {
+        	temp[i][j] = current_state[i][j];
+        }
+    }
+    makeMove(temp,move);
+    printArray(temp);
+    int manhattan=manhattan_distance(temp,goal_state);
+    cout<<"Current Manhattan number :"<<manhattan<<endl<<endl<<endl;
+    for(int i=0;i<3;i++)
+    {
+        delete temp[i];
+    }
+    delete temp;
+    return manhattan;
+}
+void steepestAscentHillClimbing( int** start_state, int** goal_state,int former_move)
+{
+	int arr[4] = {100,100,100,100};
+    cout<<"--------------------------------------------------------------------------------"<<endl;
+    for(int i=0;i<3;i++)
+    {
+        for(int j=0;j<3;j++)
+        {
+            if (start_state[i][j] == 0)
+            {
+                if(i>0 && former_move!=2)
+                {
+                    cout<<"Checking child (moving 0 up) "<<endl;
+                    arr[0]=tile_Ordering(start_state,goal_state,1);
+                }
+                if(i<2 && former_move!=1)
+                {
+                    cout<<"Checking child (moving 0 down) "<<endl;
+                    arr[1]=tile_Ordering(start_state,goal_state,2);
+                }
+                if(j>0 && former_move!=4)
+                {
+                    cout<<"Checking child (moving 0 left) "<<endl;
+                    arr[2]=tile_Ordering(start_state,goal_state,3);
+                }
+                if(j<2 && former_move!=3)
+                {
+                    cout<<"Checking child (moving 0 right) "<<endl;
+                    arr[3]=tile_Ordering(start_state,goal_state,4);
+                }
+            }
+        }
+        cout<<endl;
+    }
+    int localOptimum=99;
+    int index=0;
+    for(int i=0;i<4;i++)
+    {
+        if(arr[i]<localOptimum)
+        {
+            localOptimum=arr[i];
+            index=i+1;
+        }
+    }
+    makeMove(start_state,index);
+    cout<<"Next state = minimum Manhattan number :"<<endl;
+    printArray(start_state);
+    if(localOptimum==0)
+    {
+        cout<<"goal state reached"<<endl;
+        return;
+    }
+    else
+    steepestAscentHillClimbing(start_state,goal_state,index);
+}
+int main()
+{
+    int** initial = new int*[3]; // allocate an array of 3 int pointers - these represents rows
+    for(int i=0;i<3;i++)
+    {
+        initial[i]=new int[3]; // these represents columns
+    }
+
+    int** final = new int*[3]; // allocate an array of 3 int pointers - these represents rows
+    for(int i=0;i<3;i++)
+    {
+        final[i]=new int[3]; // these represents columns
+    }
+    int player_Input;
+    cout << "Enter initial board configuration - 0 denotes empty position" << endl;
+    for(int i=0;i<3;i++)
+    {
+        for(int j=0;j<3;j++)
+        {
+            cout<<"Enter input A["<<i<<"]["<<j<<"]"<<endl;
+            cin>>player_Input;
+            initial[i][j]=player_Input;
+        }
+    }
+    cout<<"--------------------------------------------------------------------------------"<<endl;
+    cout << "Enter final board configuration - 0 denotes empty position" << endl;
+    for(int i=0;i<3;i++)
+        for(int j=0;j<3;j++)
+        {
+            cout<<"Enter input A["<<i<<"]["<<j<<"]"<<endl;
+            cin>>player_Input;
+            final[i][j]=player_Input;
+        }
+    cout<<"\n---------------------------Your initial matrix is-------------------------------\n"<<endl;
+    for(int i=0;i<3;i++)
+    {
+        for(int j=0;j<3;j++)
+        {
+        	cout << setw(8) << initial[i][j];
+        }
+        cout<<endl;
+    }
+    cout<<"\n---------------------------Your final matrix is--------------------------------\n"<<endl;
+    for(int i=0;i<3;i++)
+    {
+        for(int j=0;j<3;j++)
+        {
+        	cout << setw(8) << final[i][j];
+        }
+        cout<<endl;
+    }
+	cout<<"\n--------------------------------------------------------------------------------"<<endl;
+	cout<<"\n--------------------------------------------------------------------------------"<<endl;
+    cout<<"\nCalling Steepest Ascent Hill Climbing function\n"<<endl;
+   steepestAscentHillClimbing(initial,final,0);
+    for(int i=0;i<3;i++)
+    {
+        delete initial[i];
+        delete final[i];
+    }
+    delete initial;
+    delete final;
+    return 0;
+}
+// Practical 5
+
+#include<bits/stdc++.h>
+using namespace std;
+
+void showInstructions()
+{
+    printf("\t\t\t TIC TAC TOE\n\n");
+    printf("Cells are numbered from 1 to 9 as below\n\n");
+
+    printf("\t\t\t 1 | 2 | 3 \n");
+    printf("\t\t\t-----------\n");
+    printf("\t\t\t 4 | 5 | 6 \n");
+    printf("\t\t\t-----------\n");
+    printf("\t\t\t 7 | 8 | 9 \n");
+    printf("\t\t\t-----------\n");
+
+    printf("-\t-\t-\t-\t-\t-\t-\t-\t-\t\n\n");
+
+    return;
+}
+
+struct Move
+{
+	int row, col;
+};
+
+char player = 'x', opponent = 'o';
+
+bool isMovesLeft(char board[3][3])
+{
+	for (int i = 0; i<3; i++)
+		for (int j = 0; j<3; j++)
+			if (board[i][j]=='_')
+				return true;
+	return false;
+}
+
+int evaluate(char b[3][3])
+{
+	// Checking for Rows for X or O victory.
+	for (int row = 0; row<3; row++)
+	{
+		if (b[row][0]==b[row][1] &&
+			b[row][1]==b[row][2])
+		{
+			if (b[row][0]==player)
+				return +10;
+			else if (b[row][0]==opponent)
+				return -10;
+		}
+	}
+
+	// Checking for Columns for X or O victory.
+	for (int col = 0; col<3; col++)
+	{
+		if (b[0][col]==b[1][col] &&
+			b[1][col]==b[2][col])
+		{
+			if (b[0][col]==player)
+				return +10;
+
+			else if (b[0][col]==opponent)
+				return -10;
+		}
+	}
+
+	// Checking for Diagonals for X or O victory.
+	if (b[0][0]==b[1][1] && b[1][1]==b[2][2])
+	{
+		if (b[0][0]==player)
+			return +10;
+		else if (b[0][0]==opponent)
+			return -10;
+	}
+
+	if (b[0][2]==b[1][1] && b[1][1]==b[2][0])
+	{
+		if (b[0][2]==player)
+			return +10;
+		else if (b[0][2]==opponent)
+			return -10;
+	}
+
+	// Else if none of them have won then return 0
+	return 0;
+}
+
+int minimax(char board[3][3], int depth, bool isMax)
+{
+	int score = evaluate(board);
+
+	// If Maximizer has won the game return his/her
+	// evaluated score
+	if (score == 10)
+		return score;
+
+	// If Minimizer has won the game return his/her
+	// evaluated score
+	if (score == -10)
+		return score;
+
+	// If there are no more moves and no winner then
+	// it is a tie
+	if (isMovesLeft(board)==false)
+		return 0;
+
+	// If this maximizer's move
+	if (isMax)
+	{
+		int best = -1000;
+
+		// Traverse all cells
+		for (int i = 0; i<3; i++)
+		{
+			for (int j = 0; j<3; j++)
+			{
+				// Check if cell is empty
+				if (board[i][j]=='_')
+				{
+					// Make the move
+					board[i][j] = player;
+
+					// Call minimax recursively and choose
+					// the maximum value
+					best = max( best,
+						minimax(board, depth+1, !isMax) );
+
+					// Undo the move
+					board[i][j] = '_';
+				}
+			}
+		}
+		return best;
+	}
+
+	// If this minimizer's move
+	else
+	{
+		int best = 1000;
+
+		// Traverse all cells
+		for (int i = 0; i<3; i++)
+		{
+			for (int j = 0; j<3; j++)
+			{
+				// Check if cell is empty
+				if (board[i][j]=='_')
+				{
+					// Make the move
+					board[i][j] = opponent;
+
+					// Call minimax recursively and choose
+					// the minimum value
+					best = min(best,
+						minimax(board, depth+1, !isMax));
+
+					// Undo the move
+					board[i][j] = '_';
+				}
+			}
+		}
+		return best;
+	}
+}
+
+// This will return the best possible move for the player
+Move findBestMove(char board[3][3])
+{
+	int bestVal = -1000;
+	Move bestMove;
+	bestMove.row = -1;
+	bestMove.col = -1;
+
+	for (int i = 0; i<3; i++)
+	{
+		for (int j = 0; j<3; j++)
+		{
+			// Check if cell is empty
+			if (board[i][j]=='_')
+			{
+				// Make the move
+				board[i][j] = player;
+
+				// compute evaluation function for this
+				// move.
+				int moveVal = minimax(board, 0, false);
+
+				// Undo the move
+				board[i][j] = '_';
+
+				if (moveVal > bestVal)
+				{
+					bestMove.row = i;
+					bestMove.col = j;
+					bestVal = moveVal;
+				}
+			}
+		}
+	}
+
+	printf("The value of the best Move is : %d\n\n",
+			bestVal);
+
+	return bestMove;
+}
+
+int find_pos(int i, int j)
+{
+    int pos;
+        if(i==0&&j==0)
+        {
+            pos=1;
+        }
+        else if(i==0&&j==1)
+        {
+            pos=2;
+        }
+        else if(i==0&&j==2)
+        {
+            pos=3;
+        }
+        else if(i==1&&j==0)
+        {
+            pos=4;
+        }
+        else if(i==1&&j==1)
+        {
+            pos=5;
+        }
+        else if(i==1&&j==2)
+        {
+            pos=6;
+        }
+        else if(i==2&&j==0)
+        {
+            pos=7;
+        }
+        else if(i==2&&j==1)
+        {
+            pos=8;
+        }
+        else if(i==2&&j==2)
+        {
+            pos=9;
+        }
+
+        return pos;
+}
+
+int main()
+{
+    int block;
+    showInstructions();
+    cout<<"Symbol pf player - x\nopponent - o"<<endl;
+	char board[3][3] =
+	{
+		{ 'x', 'o', 'x' },
+		{ 'o', 'o', 'x' },
+		{ 'o', '_', '_' }
+	};
+
+	int i,j;
+	cout<<endl;
+	for(i=0;i<3;i++)
+    {
+        for(j=0;j<3;j++)
+        {
+            cout<<board[i][j]<<"\t";
+        }
+        cout<<endl;
+    }
+
+	Move bestMove = findBestMove(board);
+
+	printf("The Optimal Move is :\n");
+	block=find_pos(bestMove.row,bestMove.col);
+	cout<<block;
+	return 0;
+}
+// Practical 6
+
+#include <bits/stdc++.h>
+
+using namespace std;
+#define V 4
+
+int cost = 0;
+int start = 0, goal = 0;
+vector<int> visited;
+int graph[][V] = {
+        {0,10,15,20},
+        {10,0,35,25},
+        {15,35,0,30},
+        {20,25,30,0}
+    };
+   
+void calculate_cost()
+{
+    for(int i=0;i<visited.size();i++)
+    {
+        cost = cost + graph[visited[i]][visited[i+1]];
+    }
+    cout<<"cost = "<<cost;
+}
+
+void best_first_search()
+{
+    int i,m;
+    vector< pair<int,int> > straight_distance;
+   
+    straight_distance.push_back(make_pair(1,6));
+    straight_distance.push_back(make_pair(2,4));
+    straight_distance.push_back(make_pair(3,2));
+   
+    cout<<"straight distance from starting node A "<<endl;
+    for(int i = 0; i < straight_distance.size();i++)
+    {
+        printf("%c = %d\n",straight_distance[i].first+65,straight_distance[i].second);
+    }
+   
+    int size=straight_distance.size();
+    visited.push_back(start);
+    printf("%c-->",start+65);
+    while(size--)
+    {
+        int saveIndex = 0;
+        for(int i = 1; i < straight_distance.size();i++)
+        {
+            if(straight_distance[saveIndex].second > straight_distance[i].second)
+            {
+                saveIndex = i;
+            }
+        }
+       
+        int smallestValue = straight_distance[saveIndex].second;
+        for(int i = 0; i < straight_distance.size();i++)
+        {
+            if(straight_distance[i].second == smallestValue)
+            {
+                visited.push_back(straight_distance[i].first);
+                printf("%c-->",straight_distance[i].first+65);
+               
+                straight_distance.erase(straight_distance.begin() + saveIndex);
+            }
+        }
+    }
+   
+    visited.push_back(goal);
+    printf("%c\n",goal+65);
+}
+
+int main()
+{
+    int n = 4,i,j;
+   
+    cout<<"FOUR CITIES"<<endl<<"A,B,C,D"<<endl<<"cost"<<endl;
+    for(i=0;i<4;i++)
+    {
+        for(j=0;j<4;j++)
+        {
+            printf("%c=%c = %d\n",i+65,j+65,graph[i][j]);
+        }
+        printf("\n");
+    }
+   
+    cout<<"PATH";
+    best_first_search();
+    calculate_cost();
+    return 0;
+}
+// Practical 7
+
+#include<stdio.h>
+#define max 100
+int main(void)
+{
+    int n;
+    int m=9999;
+    printf("Enter the number of nodes: \n");
+    scanf("%d",&n);
+    int i,j;
+    int mat[n][n];
+    printf("Enter the values of the matrix:\n");
+    for(int i=0;i<n;i++)
+    {
+        for(int j=0;j<n;j++)
+        {
+            scanf("%d",&mat[i][j]);
+        }
+    }
+    int a[n];
+    printf("Enter the heuristic:\n");
+    for(i=0;i<n;i++)
+    {
+        scanf("%d",&a[i]);
+    }
+    int start;
+    printf("Enter the start node:\n");
+    scanf("%d",&start);
+    int goal;
+    printf("Enter the goal node:\n");
+    scanf("%d",&goal);
+    int visited[max]={0};
+    int t=0;
+    visited[start]=1;
+    int x=start;
+    int p=0;
+    int y,v,sum=0;
+    printf("Start state is %c\n",start+65);
+    printf("Goal state is %c\n",goal+65);
+    printf("%c ",start+65);
+    while(x!=goal)
+    {
+        for(i=0;i<n;i++)
+        {
+            if(mat[x][i]!=0 && visited[i]!=1)
+            {
+                p=mat[x][i]+a[i];
+                if(m>p)
+                {
+                    y=mat[x][i];
+                    m=p;
+                    v=i;
+                }
+            }
+        }
+        sum=sum+y;
+        visited[v]=1;
+        printf("%c ",v+65);
+        x=v;
+        m=9999;
+    }
+printf("\nCost is %d\n",sum);
+return 0;
+}
+// Pracitcal 8
+
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <time.h>
+#include <getopt.h>
+
+static int arrows;
+static int debug = 0;	
+
+#define YOU	    0
+#define WUMPUS	1
+#define PIT1	2
+#define PIT2	3
+#define BATS1	4
+#define BATS2	5
+#define LOCS	6
+
+static int loc[LOCS];
+
+#define NOT	     0
+#define WIN	     1
+#define LOSE	-1
+
+static int finished;
+
+static int cave[20][3] =
+{
+    {1,4,7},
+    {0,2,9},
+    {1,3,11},
+    {2,4,13},
+    {0,3,5},
+    {4,6,14},
+    {5,7,16},
+    {0,6,8},
+    {7,9,17},
+    {1,8,10},
+    {9,11,18},
+    {2,10,12},
+    {11,13,19},
+    {3,12,14},
+    {5,13,15},
+    {14,16,19},
+    {6,15,17},
+    {8,16,18},
+    {10,17,19},
+    {12,15,18},
+};
+
+int getnum(char* prompt) {
+
+    int n;
+    printf("%s: ", prompt);
+    scanf("%d", &n);
+
+    return n;
+}
+
+int getlet(char* prompt) {
+
+    char c = '\n';
+
+    printf("%s: ", prompt);
+    while (c == '\n') {
+        scanf("%c", &c);
+    }
+
+    return toupper(c);
+}
+
+void print_instructions() {
+
+    printf(
+        "WELCOME TO 'HUNT THE WUMPUS'\n"
+        "THE WUMPUS LIVES IN A CAVE OF 20 ROOMS. EACH ROOM\n"
+        "HAS 3 TUNNELS LEADING TO OTHER ROOMS. (LOOK AT A\n"
+        "DODECAHEDRON TO SEE HOW THIS WORKS-IF YOU DON'T KNOW\n"
+        "WHAT A DODECAHEDRON IS, ASK SOMEONE)\n"
+        "\n"
+        " HAZARDS:\n"
+        " BOTTOMLESS PITS: TWO ROOMS HAVE BOTTOMLESS PITS IN THEM\n"
+        " IF YOU GO THERE, YOU FALL INTO THE PIT (& LOSE!)\n"
+        " SUPER BATS     : TWO OTHER ROOMS HAVE SUPER BATS. IF YOU\n"
+        " GO THERE, A BAT GRABS YOU AND TAKES YOU TO SOME OTHER\n"
+        " ROOM AT RANDOM. (WHICH MAY BE TROUBLESOME)\n"
+        " WUMPUS:\n"
+        " THE WUMPUS IS NOT BOTHERED BY HAZARDS (HE HAS SUCKER\n"
+        " FEET AND IS TOO BIG FOR A BAT TO LIFT).  USUALLY\n"
+        " HE IS ASLEEP.  TWO THINGS WAKE HIM UP: YOU SHOOTING AN\n"
+        " ARROW OR YOU ENTERING HIS ROOM.\n"
+        " IF THE WUMPUS WAKES HE MOVES (P=.75) ONE ROOM\n"
+        " OR STAYS STILL (P=.25).  AFTER THAT, IF HE IS WHERE YOU\n"
+        " ARE, HE EATS YOU UP AND YOU LOSE!\n"
+        "\n"
+        " YOU:\n"
+        " EACH TURN YOU MAY MOVE OR SHOOT A CROOKED ARROW\n"
+        " MOVING:  YOU CAN MOVE ONE ROOM (THRU ONE TUNNEL)\n"
+        " ARROWS:  YOU HAVE 5 ARROWS.  YOU LOSE WHEN YOU RUN OUT\n"
+        " EACH ARROW CAN GO FROM 1 TO 5 ROOMS. YOU AIM BY TELLING\n"
+        "   THE COMPUTER THE ROOM#S YOU WANT THE ARROW TO GO TO.\n"
+        "   IF THE ARROW CAN'T GO THAT WAY (IF NO TUNNEL) IT MOVES\n"
+        "   AT RANDOM TO THE NEXT ROOM.\n"
+        "     IF THE ARROW HITS THE WUMPUS, YOU WIN.\n"
+        "     IF THE ARROW HITS YOU, YOU LOSE.\n"
+        " WARNINGS:\n"
+        " WHEN YOU ARE ONE ROOM AWAY FROM A WUMPUS OR HAZARD,\n"
+        " THE COMPUTER SAYS:\n"
+        " WUMPUS:  'I SMELL A WUMPUS'\n"
+        " BAT   :  'BATS NEARBY'\n"
+        " PIT   :  'I FEEL A DRAFT'\n"
+        "\n"
+    );
+}
+
+void show_room() {
+
+    printf("\n");
+
+    for (int k = 0; k < 3; k++) {
+
+	   int room = cave[loc[YOU]][k];
+
+	   if (room == loc[WUMPUS]) {
+	       printf("I SMELL A WUMPUS!\n");
+	   } else if (room == loc[PIT1] || room == loc[PIT2]) {
+	       printf("I FEEL A DRAFT\n");
+	   } else if (room == loc[BATS1] || room == loc[BATS2]) {
+	       printf("BATS NEARBY!\n");
+       }
+    }
+
+    printf("YOU ARE IN ROOM %d\n", loc[YOU]+1);
+
+    printf("TUNNELS LEAD TO %d %d %d\n\n",
+        cave[loc[YOU]][0]+1, 
+        cave[loc[YOU]][1]+1, 
+        cave[loc[YOU]][2]+1);
+}
+
+int move_or_shoot() {
+
+    int c = -1;
+
+    while ((c != 'S') && (c != 'M')) {
+        c = getlet("SHOOT OR MOVE (S-M)");
+    }
+
+    return (c == 'S') ? 1 : 0;
+}
+
+void move_wumpus() {
+
+    int k = rand() % 4;
+
+    if (k < 3) {
+       loc[WUMPUS] = cave[loc[WUMPUS]][k];
+    }
+
+    if (loc[WUMPUS] == loc[YOU]) {
+        printf("TSK TSK TSK - WUMPUS GOT YOU!\n");
+        finished = LOSE;
+    }
+}
+
+void shoot() {
+
+    int path[5];
+    int scratchloc = -1;
+
+    finished = NOT;
+
+    int len = -1;
+    while (len < 1 || len > 5) {
+        len = getnum("NO. OF ROOMS (1-5)");
+    }
+
+    int k = 0;
+    while (k < len) {
+        path[k] = getnum("ROOM #") - 1;
+
+        if ((k>1) && (path[k] == path[k-2])) {
+            printf("ARROWS AREN'T THAT CROOKED - TRY ANOTHER ROOM\n");
+            continue; 
+       } 
+       k++;
+    }
+ 
+    scratchloc = loc[YOU];
+
+    for (int k = 0; k < len; k++) {
+
+        if ((cave[scratchloc][0] == path[k]) ||
+            (cave[scratchloc][1] == path[k]) ||
+            (cave[scratchloc][2] == path[k])) {
+
+            scratchloc = path[k];
+        } else {
+            scratchloc = cave[scratchloc][rand()%3];
+        }
+
+        if (scratchloc == loc[WUMPUS]) {
+
+            printf("AHA! YOU GOT THE WUMPUS!\n");
+            finished = WIN;
+
+        } else if (scratchloc == loc[YOU]) {
+
+            printf("OUCH! ARROW GOT YOU!\n");
+            finished = LOSE;
+        }
+
+        if (finished != NOT) {
+            return;
+        }
+    }
+
+	printf("MISSED\n");
+
+	move_wumpus();
+
+	if (--arrows <= 0) {
+	    finished = LOSE;
+    }
+}
+
+void move() {
+
+    int scratchloc = -1;
+    while (scratchloc == -1) {
+        scratchloc = getnum("WHERE TO")-1;
+
+        if (scratchloc < 0 || scratchloc > 19) {
+            scratchloc = -1;
+            continue;
+        }
+
+        if ((cave[loc[YOU]][0] != scratchloc) &
+            (cave[loc[YOU]][1] != scratchloc) &
+            (cave[loc[YOU]][2] != scratchloc) &
+            (loc[YOU] != scratchloc)) {
+
+            printf("NOT POSSIBLE\n");
+
+            scratchloc = -1;
+            continue;
+        }
+    }
+   
+    loc[YOU] = scratchloc;
+
+    while ((scratchloc == loc[BATS1]) || (scratchloc == loc[BATS2])) {
+        printf("ZAP--SUPER BAT SNATCH! ELSEWHEREVILLE FOR YOU!\n");
+        scratchloc = loc[YOU] = rand()%20;
+    }
+
+    if (scratchloc == loc[WUMPUS]) {
+	   printf("... OOPS! BUMPED A WUMPUS!\n");
+	   move_wumpus();
+    } 
+
+    if (scratchloc == loc[PIT1] || scratchloc == loc[PIT2]) {
+	   printf("YYYYIIIIEEEE . . . FELL IN PIT\n");
+	   finished = LOSE;
+    }
+}
+
+void game_setup() {
+
+    for (int j = 0; j < LOCS; j++) {
+
+        loc[j] = -1;
+        while (loc[j] < 0) {
+
+            loc[j] = rand()%20;
+            for (int k=0; k<j-1; k++) {
+                if (loc[j] == loc[k]) {
+                    loc[j] = -1;
+                }
+           }
+       }
+    }
+}
+
+void game_play() {
+
+    arrows = 5;
+
+    printf("HUNT THE WUMPUS\n");
+
+    if (debug) {
+        printf("Wumpus is at %d, pits at %d & %d, bats at %d & %d\n",
+            loc[WUMPUS]+1,
+            loc[PIT1]+1, loc[PIT2]+1,
+            loc[BATS1]+1, loc[BATS2]+1);
+    }
+
+    finished = NOT;
+    while (finished == NOT) {
+
+        show_room();
+        if (move_or_shoot()) {
+            shoot();
+        } else {
+            move();
+        }
+    }
+
+    if (finished == WIN) {
+        printf("HEE HEE HEE - THE WUMPUS'LL GET YOU NEXT TIME!!\n");
+    }
+
+    if (finished == LOSE) {
+        printf("HA HA HA - YOU LOSE!\n");
+    }
+
+    int c = getlet("NEW GAME (Y-N)");
+
+    if (c == 'N') {
+        exit(0);
+    }
+}
+
+void handle_params(int argc, char* argv[]) {
+
+    int c;
+
+    while ((c = getopt(argc, argv, "s:dh")) != -1) {
+        switch (c) {
+        case 's':
+            srand(atoi(optarg));
+            break; 
+        case 'd':
+            debug = 1;
+            break;
+        case 'h':
+        default:
+            printf("usage: ./%s [-h] [-d] [-s seed]\n", argv[0]);
+            exit(1);
+        }
+    }
+}
+
+int main(int argc, char* argv[]) {
+
+    srand(time(0));
+    handle_params(argc, argv);
+    
+    int c = getlet("INSTRUCTIONS (Y-N)");
+
+    if (c == 'Y') {
+	   print_instructions();
+    }
+
+    do { 
+
+        game_setup();
+        game_play();
+
+    } while (getlet("NEW GAME (Y-N)") != 'N');
+
+    return 0;
+}
